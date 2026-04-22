@@ -96,6 +96,3 @@ python scripts/analyze_structure.py tree.json --max-files 10
 python scripts/generate_report.py analysis_result.json --style full
 ```
 
-## License
-
-MIT
