@@ -1,0 +1,18 @@
+# OpenClaw private files
+.openclaw/
+memory/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Personal config (not for public)
+AGENTS.md
+BOOTSTRAP.md
+DREAMS.md
+HEARTBEAT.md
+TOOLS.md
+MEMORY.md
+
+# Logs
+*.log
