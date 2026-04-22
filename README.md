@@ -31,6 +31,7 @@ cp -r PainHub/skills/daily-pulse ~/.openclaw/workspace/skills/
 | Skill | 描述 | 状态 | 路径 |
 |-------|------|------|------|
 | 🎯 **daily-pulse** | 每日热点推送 + 按需查询，结构化预抓取 + 热度评分 | `stable` | [`skills/daily-pulse/`](skills/daily-pulse/) |
+| 🔍 **deep-repo-research** | 研究 GitHub/GitLab 仓库并生成结构化 Markdown 报告 | `stable` | [`skills/deep-repo-research/`](skills/deep-repo-research/) |
 
 ---
 
@@ -54,7 +55,11 @@ PainHub/
 ├── DESIGN.md              # Skill README 设计规范
 ├── .gitignore             # 全局忽略规则（隐私文件 + OS 文件）
 └── skills/
-    └── daily-pulse/       # 每日热点推送
+    ├── daily-pulse/       # 每日热点推送
+    │   ├── SKILL.md
+    │   ├── README.md
+    │   └── scripts/
+    └── deep-repo-research/  # 仓库深度研究
         ├── SKILL.md
         ├── README.md
         └── scripts/
