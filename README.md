@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>🎯 <code>PainHub</code></h1>
+<h1>🎯 <code>KrisVault</code></h1>
 
 <p>
   <b>为 Claude Code、OpenClaw 及更多 AI 工具打造的开源技能集合</b><br>
@@ -25,7 +25,7 @@
 
 ### 简介
 
-**PainHub** 是一个开源技能（Skill）集合仓库，兼容 [Claude Code](https://claude.ai/code)、**OpenClaw** 及各类支持技能扩展的 AI 开发工具。每个技能都是独立的模块，可单独安装到对应的 AI 环境中。
+**KrisVault** 是一个开源技能（Skill）集合仓库，兼容 [Claude Code](https://claude.ai/code)、**OpenClaw** 及各类支持技能扩展的 AI 开发工具。每个技能都是独立的模块，可单独安装到对应的 AI 环境中。
 
 ### 技能列表
 
@@ -37,8 +37,8 @@
 ### 快速开始
 
 ```bash
-git clone https://github.com/Coder42Y/PainHub.git
-cd PainHub
+git clone https://github.com/Coder42Y/KrisVault.git
+cd KrisVault
 ```
 
 进入你想使用的技能目录，按该技能的 README 安装即可。
@@ -69,7 +69,7 @@ cd PainHub
 
 ### About
 
-**PainHub** is an open-source skill collection compatible with [Claude Code](https://claude.ai/code), **OpenClaw**, and other AI tools that support skill extensions. Each skill is a standalone module that can be individually installed.
+**KrisVault** is an open-source skill collection compatible with [Claude Code](https://claude.ai/code), **OpenClaw**, and other AI tools that support skill extensions. Each skill is a standalone module that can be individually installed.
 
 ### Skills
 
@@ -81,8 +81,8 @@ cd PainHub
 ### Quick Start
 
 ```bash
-git clone https://github.com/Coder42Y/PainHub.git
-cd PainHub
+git clone https://github.com/Coder42Y/KrisVault.git
+cd KrisVault
 ```
 
 Navigate to any skill directory and follow its README for installation.
