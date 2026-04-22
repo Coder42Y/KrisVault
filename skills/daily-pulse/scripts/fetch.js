@@ -27,7 +27,7 @@ function fetchUrl(url, timeoutMs = 15000, headers = {}) {
       hostname: urlObj.hostname,
       path: urlObj.pathname + urlObj.search,
       timeout: timeoutMs,
-      headers: { "User-Agent": "hot-topics-fetch/1.0", ...headers }
+      headers: { "User-Agent": "daily-pulse-fetch/1.0", ...headers }
     };
     const req = client.get(options, (res) => {
       let data = "";

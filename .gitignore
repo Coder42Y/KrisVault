@@ -17,5 +17,28 @@ IDENTITY.md
 SOUL.md
 USER.md
 
+# Secrets / credentials
+.env
+.env.*
+*.key
+*.pem
+*.crt
+secrets/
+credentials/
+
 # Logs
 *.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml

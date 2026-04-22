@@ -1,12 +1,12 @@
 ---
-name: hot-topics
+name: daily-pulse
 description: >
   每日热点推送 + 按需查询。支持 7 个预设板块（热点新闻/AI/财经/电竞/足球/GitHub/科技）
   和用户自定义板块。触发词：推热点、今日热点、给我看看XX、查一下XX、XX简讯、XX赛程。
   配置：~/.openclaw/cron/hot-topics-prefs.json（v3）。
 ---
 
-# 热点推送 v3
+# Daily Pulse v3
 
 结构化低热点聚合系统。预抓取脚本完成所有网络请求，Agent 只负责评分、摘要、排版。
 
@@ -19,7 +19,7 @@ description: >
 **任何热点推送或查询任务，第一步必须是：**
 
 ```bash
-node /Users/kris/.openclaw/workspace/skills/hot-topics/scripts/fetch.js
+node ~/.openclaw/workspace/skills/daily-pulse/scripts/fetch.js
 ```
 
 然后读取结果：
@@ -204,7 +204,7 @@ Cron 每天 9:30 触发，payload：`请执行每日热点推送`。
 
 | 文件 | 路径 |
 |------|------|
-| 预抓取脚本 | `/Users/kris/.openclaw/workspace/skills/hot-topics/scripts/fetch.js` |
+| 预抓取脚本 | `~/.openclaw/workspace/skills/daily-pulse/scripts/fetch.js` |
 | 配置文件 | `~/.openclaw/cron/hot-topics-prefs.json` |
 | 抓取结果 | `/tmp/hot-topics-raw.json` |
 | 缓存目录 | `~/.openclaw/cron/` |

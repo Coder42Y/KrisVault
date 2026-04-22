@@ -1,4 +1,4 @@
-# 🎯 hot-topics
+# 🎯 daily-pulse
 
 > 每日热点推送 + 按需查询，结构化预抓取 + Agent 评分排版
 
@@ -7,7 +7,7 @@
 | **版本** | `v3.0.0` |
 | **状态** | `stable` |
 | **OpenClaw** | `>= 0.5.0` |
-| **最近更新** | `2026-04-21` |
+| **最近更新** | `2026-04-22` |
 
 **一句话：**让 Agent 用 5 秒完成全网热点抓取，再用 LLM 做热度评分和一句话摘要，替代过去 3 分钟、44K tokens 的纯 LLM 搜索模式。
 
@@ -18,7 +18,7 @@
 ```bash
 # 1. 安装
 # 将本目录复制到 OpenClaw skills 目录
-cp -r hot-topics ~/.openclaw/workspace/skills/
+cp -r daily-pulse ~/.openclaw/workspace/skills/
 
 # 2. 触发（直接跟 Agent 说）
 "推热点"
@@ -228,18 +228,17 @@ Cron 每天 9:30 自动执行。payload：`请执行每日热点推送`。
 ## 文件结构
 
 ```
-hot-topics/
+daily-pulse/
 ├── SKILL.md              # Agent 指令（核心，YAML frontmatter + Markdown 正文）
 ├── README.md             # 本文档
 ├── scripts/
 │   ├── fetch.js          # 预抓取脚本：并行 HTTP、RSS 解析、GitHub/HN API
 │   ├── cache.js          # 缓存读写：GitHub stars 历史、原子写入、路径安全
 │   └── test.js           # 自动化测试：57 项断言
-├── docs/
-│   └── superpowers/
-│       ├── specs/        # v3 设计文档
-│       └── plans/        # 实现计划
-└── ARCHITECTURE.md       # 深度调研报告（v2 工作方式分析）
+└── docs/
+    └── superpowers/
+        ├── specs/        # v3 设计文档
+        └── plans/        # 实现计划
 ```
 
 ---
@@ -254,7 +253,7 @@ hot-topics/
 ## 测试
 
 ```bash
-cd ~/.openclaw/workspace/skills/hot-topics/scripts
+cd ~/.openclaw/workspace/skills/daily-pulse/scripts
 node test.js
 ```
 
