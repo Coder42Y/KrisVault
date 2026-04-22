@@ -1,77 +1,106 @@
-# PainHub
+<div align="center">
 
-> OpenClaw Skills Collection — 结构化、低成本的 Agent 能力扩展
+<h1>🎯 <code>PainHub</code></h1>
 
-| | |
-|:---|:---|
-| **仓库** | `Coder42Y/PainHub` |
-| **最近更新** | `2026-04-22` |
+<p>
+  <b>为 Claude Code、OpenClaw 及更多 AI 工具打造的开源技能集合</b><br>
+  <em>An open-source skill collection for Claude Code, OpenClaw &amp; more AI tools</em>
+</p>
 
-<strong>一句话：</strong>一组为 OpenClaw 设计的声明式 Skill，把原本由 LLM 完成的重复性工作（搜索、评分、格式化）下沉到结构化脚本，Agent 只做决策和摘要。
+<p>
+  <a href="#-简体中文"><kbd>🀄&nbsp;&nbsp;简体中文</kbd></a>
+  &nbsp;&nbsp;
+  <a href="#-english"><kbd>🇬🇧&nbsp;&nbsp;English</kbd></a>
+</p>
+
+<br>
+
+</div>
 
 ---
 
-## 快速开始
+<a id="简体中文"></a>
+
+<h2>🀄 简体中文</h2>
+
+### 简介
+
+**PainHub** 是一个开源技能（Skill）集合仓库，兼容 [Claude Code](https://claude.ai/code)、**OpenClaw** 及各类支持技能扩展的 AI 开发工具。每个技能都是独立的模块，可单独安装到对应的 AI 环境中。
+
+### 技能列表
+
+| 技能 | 描述 | 版本 |
+|------|------|------|
+| [🎯 daily-pulse](./skills/daily-pulse/) | 每日热点推送 + 按需查询，结构化预抓取 + Agent 评分排版 | `v3.0.0` |
+| [🔍 deep-repo-research](./skills/deep-repo-research/) | 自动调研 GitHub/GitLab 仓库并生成结构化 Markdown 报告。支持 Go / Node.js / Python / Java / Rust / Ruby 项目，四种报告风格，含私有仓库支持 | `v0.1.0` |
+
+### 快速开始
 
 ```bash
-# 1. 克隆仓库
 git clone https://github.com/Coder42Y/PainHub.git
-
-# 2. 安装单个 skill（以 daily-pulse 为例）
-cp -r PainHub/skills/daily-pulse ~/.openclaw/workspace/skills/
-
-# 3. 触发
-"推热点"
+cd PainHub
 ```
 
+进入你想使用的技能目录，按该技能的 README 安装即可。
+
+### 设计规范
+
+所有 Skill README 遵循统一的设计规范，见 [`DESIGN.md`](DESIGN.md)。
+
+### 贡献指南
+
+1. 每个技能放在 `skills/<skill-name>/` 目录下
+2. 包含 `SKILL.md`（Claude 读取的技能定义）和 `README.md`（用户文档）
+3. 提供完整的测试和安装说明
+
+### 隐私声明
+
+本仓库公开的代码和文档均经过清理，不含个人身份信息、API key / token / 密码、私有配置。个人隐私文件通过 `.gitignore` 排除。
+
+### 许可证
+
+[MIT](./LICENSE)
+
 ---
 
-## Skills
+<a id="english"></a>
 
-| Skill | 描述 | 状态 | 路径 |
-|-------|------|------|------|
-| 🎯 **daily-pulse** | 每日热点推送 + 按需查询，结构化预抓取 + 热度评分 | `stable` | [`skills/daily-pulse/`](skills/daily-pulse/) |
-| 🔍 **deep-repo-research** | 研究 GitHub/GitLab 仓库并生成结构化 Markdown 报告 | `stable` | [`skills/deep-repo-research/`](skills/deep-repo-research/) |
+<h2>🇬🇧 English</h2>
 
----
+### About
 
-## 设计规范
+**PainHub** is an open-source skill collection compatible with [Claude Code](https://claude.ai/code), **OpenClaw**, and other AI tools that support skill extensions. Each skill is a standalone module that can be individually installed.
 
-所有 Skill README 遵循统一的头部设计规范，见 [`DESIGN.md`](DESIGN.md)。
+### Skills
 
-核心原则：
-- 首屏高密度信息（版本、状态、兼容性、更新时间）
-- 一句话价值主张，站在用户角度
-- 快速开始 ≤ 3 步
-- 中英混排自然，不花哨
+| Skill | Description | Version |
+|-------|-------------|---------|
+| [🎯 daily-pulse](./skills/daily-pulse/) | Daily hot topics push + on-demand query, structured pre-fetching + Agent scoring | `v3.0.0` |
+| [🔍 deep-repo-research](./skills/deep-repo-research/) | Research GitHub/GitLab repos and generate structured Markdown reports. Supports Go / Node.js / Python / Java / Rust / Ruby, four report styles, with private repo support | `v0.1.0` |
 
----
+### Quick Start
 
-## 仓库结构
-
+```bash
+git clone https://github.com/Coder42Y/PainHub.git
+cd PainHub
 ```
-PainHub/
-├── README.md              # 本文档
-├── DESIGN.md              # Skill README 设计规范
-├── .gitignore             # 全局忽略规则（隐私文件 + OS 文件）
-└── skills/
-    ├── daily-pulse/       # 每日热点推送
-    │   ├── SKILL.md
-    │   ├── README.md
-    │   └── scripts/
-    └── deep-repo-research/  # 仓库深度研究
-        ├── SKILL.md
-        ├── README.md
-        └── scripts/
-```
 
----
+Navigate to any skill directory and follow its README for installation.
 
-## 隐私声明
+### Design Guidelines
 
-本仓库公开的代码和文档均经过清理，不含：
-- 个人身份信息
-- API key / token / 密码
-- 私有配置（cron 任务、memory 记录等）
+All skill READMEs follow a unified design system. See [`DESIGN.md`](DESIGN.md).
 
-个人隐私文件通过 `.gitignore` 排除，保存在本地分支 `backup/personal-state`，永不推送。
+### Contributing
+
+1. Place each skill in `skills/<skill-name>/`
+2. Include `SKILL.md` (Claude skill definition) and `README.md` (user docs)
+3. Provide complete tests and installation instructions
+
+### Privacy
+
+All published code and docs are sanitized. No personal info, API keys, tokens, or private configs are included. Personal files are excluded via `.gitignore`.
+
+### License
+
+[MIT](./LICENSE)
