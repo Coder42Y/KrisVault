@@ -1,0 +1,40 @@
+# {{ repo_name }} 架构分析
+
+> 仓库地址：{{ repo_url }}
+> 分支：{{ branch }}
+> 调研时间：{{ generated_at }}
+> 分析文件数：{{ files_analyzed | length }}
+
+---
+
+## 系统架构
+
+{{ architecture.description }}
+
+### 核心组件
+
+{% for component in architecture.components %}
+- **{{ component.name }}**（`{{ component.path }}`）
+  {{ component.description }}
+{% endfor %}
+
+### 请求数据流
+
+{{ architecture.data_flow }}
+
+## 关键源码分析
+
+{% for file in files_analyzed %}
+### {{ file.path }}
+
+{{ file.analysis }}
+
+```{{ file.language }}
+{{ file.code_snippet }}
+```
+
+{% endfor %}
+
+## 总结
+
+{{ summary }}
