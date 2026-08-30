@@ -1,5 +1,7 @@
 const https = require("https");
 const http = require("http");
+const tls = require("tls");
+const zlib = require("zlib");
 const fs = require("fs");
 const path = require("path");
 const { readCache, writeCache } = require("./cache");
@@ -10,6 +12,8 @@ const CONFIG_PATH = path.join(
 );
 const OUTPUT_PATH = "/tmp/hot-topics-raw.json";
 
+let ACTIVE_PROXY = null;
+
 function readConfig() {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
@@ -19,23 +23,231 @@ function readConfig() {
   }
 }
 
+function resolveProxy(config = {}) {
+  return process.env.https_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTP_PROXY ||
+    process.env.all_proxy ||
+    process.env.ALL_PROXY ||
+    config?.global?.proxy ||
+    config?.proxy ||
+    null;
+}
+
+function parseHttpResponse(buffer) {
+  const headerEndIndex = buffer.indexOf('\r\n\r\n');
+  if (headerEndIndex === -1) {
+    throw new Error('Invalid HTTP response: header separator not found');
+  }
+  const headerPart = buffer.slice(0, headerEndIndex).toString('utf8');
+  let bodyBuffer = buffer.slice(headerEndIndex + 4);
+
+  const lines = headerPart.split('\r\n');
+  const statusLine = lines[0] || '';
+  const statusMatch = statusLine.match(/HTTP\/\d\.\d\s+(\d+)/i);
+  const status = statusMatch ? parseInt(statusMatch[1], 10) : 200;
+
+  const headers = {};
+  for (let i = 1; i < lines.length; i++) {
+    const idx = lines[i].indexOf(':');
+    if (idx > 0) {
+      const key = lines[i].slice(0, idx).trim().toLowerCase();
+      const val = lines[i].slice(idx + 1).trim();
+      headers[key] = val;
+    }
+  }
+
+  // Handle chunked transfer encoding
+  if (headers['transfer-encoding']?.toLowerCase().includes('chunked')) {
+    const chunks = [];
+    let offset = 0;
+    while (offset < bodyBuffer.length) {
+      const lineEnd = bodyBuffer.indexOf('\r\n', offset);
+      if (lineEnd === -1) break;
+      const chunkSizeHex = bodyBuffer.slice(offset, lineEnd).toString('utf8').trim().split(';')[0];
+      const chunkSize = parseInt(chunkSizeHex, 16);
+      if (isNaN(chunkSize) || chunkSize === 0) break;
+      const chunkStart = lineEnd + 2;
+      const chunkEnd = chunkStart + chunkSize;
+      chunks.push(bodyBuffer.slice(chunkStart, chunkEnd));
+      offset = chunkEnd + 2;
+    }
+    bodyBuffer = Buffer.concat(chunks);
+  }
+
+  // Handle content encoding
+  const encoding = (headers['content-encoding'] || '').toLowerCase();
+  let bodyStr = '';
+  try {
+    if (encoding.includes('gzip')) {
+      bodyStr = zlib.gunzipSync(bodyBuffer).toString('utf8');
+    } else if (encoding.includes('deflate')) {
+      bodyStr = zlib.inflateSync(bodyBuffer).toString('utf8');
+    } else if (encoding.includes('br')) {
+      bodyStr = zlib.brotliDecompressSync(bodyBuffer).toString('utf8');
+    } else {
+      bodyStr = bodyBuffer.toString('utf8');
+    }
+  } catch (err) {
+    bodyStr = bodyBuffer.toString('utf8');
+  }
+
+  return { status, headers, body: bodyStr };
+}
+
 function fetchUrl(url, timeoutMs = 15000, headers = {}) {
+  const proxyUrl = ACTIVE_PROXY;
   return new Promise((resolve, reject) => {
-    const client = url.startsWith("https:") ? https : http;
     const urlObj = new URL(url);
-    const options = {
-      hostname: urlObj.hostname,
-      path: urlObj.pathname + urlObj.search,
-      timeout: timeoutMs,
-      headers: { "User-Agent": "daily-pulse-fetch/1.0", ...headers }
-    };
-    const req = client.get(options, (res) => {
-      let data = "";
-      res.on("data", chunk => data += chunk);
-      res.on("end", () => resolve({ status: res.statusCode, body: data }));
-    });
-    req.on("error", reject);
-    req.on("timeout", () => { req.destroy(); reject(new Error("timeout")); });
+    const isHttps = urlObj.protocol === 'https:';
+    const targetPort = urlObj.port || (isHttps ? 443 : 80);
+
+    let timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("timeout"));
+    }, timeoutMs);
+
+    let activeSocket = null;
+    let connectReq = null;
+    let httpReq = null;
+
+    function cleanup() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (activeSocket) { activeSocket.destroy(); activeSocket = null; }
+      if (connectReq) { connectReq.destroy(); connectReq = null; }
+      if (httpReq) { httpReq.destroy(); httpReq = null; }
+    }
+
+    if (proxyUrl) {
+      const proxyObj = new URL(proxyUrl);
+      if (isHttps) {
+        connectReq = http.request({
+          host: proxyObj.hostname,
+          port: proxyObj.port || 80,
+          method: 'CONNECT',
+          path: `${urlObj.hostname}:${targetPort}`,
+          headers: {
+            'Host': `${urlObj.hostname}:${targetPort}`,
+            ...(proxyObj.username ? { 'Proxy-Authorization': 'Basic ' + Buffer.from(`${decodeURIComponent(proxyObj.username)}:${decodeURIComponent(proxyObj.password || '')}`).toString('base64') } : {})
+          }
+        });
+
+        connectReq.on('connect', (res, socket, head) => {
+          if (res.statusCode !== 200) {
+            cleanup();
+            return reject(new Error(`Proxy CONNECT failed: ${res.statusCode}`));
+          }
+
+          const tlsSocket = tls.connect({
+            socket: socket,
+            servername: urlObj.hostname,
+            rejectUnauthorized: true
+          }, () => {
+            const reqHeaders = {
+              'Host': urlObj.hostname,
+              'User-Agent': 'daily-pulse-fetch/1.0',
+              'Accept': '*/*',
+              'Accept-Encoding': 'gzip, deflate, br',
+              'Connection': 'close',
+              ...headers
+            };
+
+            const path = urlObj.pathname + urlObj.search;
+            const headerStr = Object.entries(reqHeaders).map(([k, v]) => `${k}: ${v}`).join('\r\n');
+            tlsSocket.write(`GET ${path} HTTP/1.1\r\n${headerStr}\r\n\r\n`);
+          });
+
+          activeSocket = tlsSocket;
+          let rawData = Buffer.alloc(0);
+
+          tlsSocket.on('data', (chunk) => {
+            rawData = Buffer.concat([rawData, chunk]);
+          });
+
+          tlsSocket.on('end', () => {
+            cleanup();
+            try {
+              const parsed = parseHttpResponse(rawData);
+              resolve({ status: parsed.status, body: parsed.body });
+            } catch (err) {
+              reject(err);
+            }
+          });
+
+          tlsSocket.on('error', (err) => {
+            cleanup();
+            reject(err);
+          });
+        });
+
+        connectReq.on('error', (err) => {
+          cleanup();
+          reject(err);
+        });
+        connectReq.end();
+      } else {
+        // Plain HTTP via proxy
+        httpReq = http.get({
+          host: proxyObj.hostname,
+          port: proxyObj.port || 80,
+          path: url,
+          headers: {
+            'Host': urlObj.hostname,
+            'User-Agent': 'daily-pulse-fetch/1.0',
+            'Accept-Encoding': 'gzip, deflate',
+            ...headers
+          }
+        }, (res) => {
+          let chunks = [];
+          res.on('data', chunk => chunks.push(chunk));
+          res.on('end', () => {
+            cleanup();
+            const buf = Buffer.concat(chunks);
+            const encoding = (res.headers['content-encoding'] || '').toLowerCase();
+            let body = '';
+            try {
+              if (encoding.includes('gzip')) body = zlib.gunzipSync(buf).toString('utf8');
+              else if (encoding.includes('deflate')) body = zlib.inflateSync(buf).toString('utf8');
+              else body = buf.toString('utf8');
+              resolve({ status: res.statusCode, body });
+            } catch (err) {
+              reject(err);
+            }
+          });
+        });
+        httpReq.on('error', (err) => {
+          cleanup();
+          reject(err);
+        });
+      }
+    } else {
+      // Direct connection
+      const client = isHttps ? https : http;
+      const options = {
+        hostname: urlObj.hostname,
+        port: urlObj.port || (isHttps ? 443 : 80),
+        path: urlObj.pathname + urlObj.search,
+        timeout: timeoutMs,
+        headers: { "User-Agent": "daily-pulse-fetch/1.0", ...headers }
+      };
+      httpReq = client.get(options, (res) => {
+        let data = "";
+        res.on("data", chunk => data += chunk);
+        res.on("end", () => {
+          cleanup();
+          resolve({ status: res.statusCode, body: data });
+        });
+      });
+      httpReq.on("error", (err) => {
+        cleanup();
+        reject(err);
+      });
+      httpReq.on("timeout", () => {
+        cleanup();
+        reject(new Error("timeout"));
+      });
+    }
   });
 }
 
@@ -120,6 +332,10 @@ async function fetchHN(tag, query, hitsPerPage = 10) {
 
 async function main() {
   const config = readConfig();
+  ACTIVE_PROXY = resolveProxy(config);
+  if (ACTIVE_PROXY) {
+    console.log(`Using proxy: ${ACTIVE_PROXY}`);
+  }
   const results = {};
   const errors = {};
   const now = Date.now();
@@ -183,4 +399,9 @@ async function main() {
   console.log("Summary:", Object.entries(results).map(([k, v]) => `${k}: ${v.length} items`).join(", "));
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+if (require.main === module) {
+  main().catch(err => { console.error(err); process.exit(1); });
+}
+
+module.exports = { fetchUrl, parseRss, fetchGithub, fetchHN, main, resolveProxy };
+
